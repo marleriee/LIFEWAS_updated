@@ -1,45 +1,46 @@
-#' The dummy function
-#'
-#' This document describes to functions. The first function, to_con divides the variables of interest in factors and continuous variables.
-#' All variables with less than 20 unique values are categorized as factor. Numerical variables are recentered and scaled using standard deviation.
-#' The second function, to_dig succcessively creates dummy variables of all factors.
-#' @param exclude Variables which do not need to be converted.
-#' @param dataframe Dataframe which is to be used as input.
-#' @keywords dummy, dummie
-#' @examples exeptions <- c("PSEUDOIDEXT", "idFU", "group", "dmNew", "dmNewDig", "time"); dataCon <- to_con(dataGrouped, exeptions); dataDig <- to_dig(dataGrouped, exeptions)
-#' to_con(), to_dig()
+# =============================================================================
+# 2 & 3. to_con / to_dig  (dummy function)
+# =============================================================================
+#' to_con: scale continuous variables (>= 20 unique values) and factorise
+#'         categorical variables; does NOT expand multi-level factors to dummies.
+#' to_dig: as to_con(), but additionally expands multi-level factors into
+#'         dummy variables via createDummyFeatures().
+#' @param dataframe  Input dataframe
+#' @param exclude    Character vector of column names to leave untouched
+#' @examples
+#'   exceptions <- c("PSEUDOIDEXT","idFU","group","dmNew","event_selected","time")
+#'   dataCon <- to_con(dataGrouped, exceptions)
+#'   dataDig <- to_dig(dataGrouped, exceptions)
 
-
-#does not create dummy variables of multilevel factors
 to_con <- function(dataframe, exclude){
-  t1 <- select(dataframe, -exclude) %>%
+  t1 <- dplyr::select(dataframe, -exclude) %>%
     lapply(function(x) length(unique(x)))
 
-  numeric <- names(t1[which(t1 >= 20)])
-  factors <- names(t1[which(t1 <= 3)])
+  numeric           <- names(t1[which(t1 >= 20)])
+  factors           <- names(t1[which(t1 <= 3)])
   factorsMultiLevel <- names(t1[which(t1 > 3 & t1 < 20)])
 
   dataframe <- dataframe %>%
     mutate_at(numeric, funs(c(scale(.))))
 
-  dataframe[factors] <- lapply(dataframe[factors], factor)
+  dataframe[factors]           <- lapply(dataframe[factors],           factor)
   dataframe[factorsMultiLevel] <- lapply(dataframe[factorsMultiLevel], factor)
   dataframe
 }
 
-#creates dummy variables of multilevel factors
 to_dig <- function(dataframe, exclude){
-  t1 <- select(dataframe, -exclude) %>%
+  t1 <- dplyr::select(dataframe, -exclude) %>%
     lapply(function(x) length(unique(x)))
 
-  numeric <- names(t1[which(t1 >= 20)])
-  factors <- names(t1[which(t1 <= 3)])
+  numeric           <- names(t1[which(t1 >= 20)])
+  factors           <- names(t1[which(t1 <= 3)])
   factorsMultiLevel <- names(t1[which(t1 > 3 & t1 < 20)])
 
   dataframe <- dataframe %>%
     mutate_at(numeric, funs(c(scale(.))))
 
-  dataframe[factors] <- lapply(dataframe[factors], factor)
+  dataframe[factors]           <- lapply(dataframe[factors],           factor)
   dataframe[factorsMultiLevel] <- lapply(dataframe[factorsMultiLevel], factor)
   dataframe <- createDummyFeatures(dataframe, cols = factorsMultiLevel)
 }
+
